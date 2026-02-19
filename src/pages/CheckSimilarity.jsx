@@ -303,8 +303,92 @@ const CheckSimilarity = () => {
       {/* Results Section */}
       {results && (
         <div className="space-y-6">
+          {/* Final Decision (New - Dual Layer Detection) */}
+          {results.final_decision && (
+            <Card title="⚖️ Final Decision">
+              <div className="space-y-4">
+                {/* Decision Badge */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className={`inline-block px-4 py-2 rounded-lg font-bold text-lg ${
+                      results.final_decision.decision === 'PLAGIARISM_CONFIRMED' 
+                        ? 'bg-danger-100 text-danger-700'
+                        : results.final_decision.decision === 'PLAGIARISM_LIKELY' || results.final_decision.decision === 'SUSPICIOUS'
+                        ? 'bg-orange-100 text-orange-700'
+                        : results.final_decision.decision === 'LOW_CONFIDENCE_MATCH'
+                        ? 'bg-yellow-100 text-yellow-700'
+                        : 'bg-success-100 text-success-700'
+                    }`}>
+                      {results.final_decision.decision.replace(/_/g, ' ')}
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-3xl font-bold text-gray-800">
+                      {(results.final_decision.confidence * 100).toFixed(0)}%
+                    </div>
+                    <div className="text-sm text-gray-600">Confidence</div>
+                  </div>
+                </div>
+                
+                {/* Detection Methods */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="flex items-center mb-2">
+                      <span className="text-2xl mr-2">🏠</span>
+                      <h4 className="font-semibold text-gray-800">Local Detection</h4>
+                    </div>
+                    <p className="text-sm text-gray-600">
+                      Embeddings + Vector Search
+                    </p>
+                    <p className="text-lg font-bold text-blue-700 mt-2">
+                      {results.final_decision.localMatchCount} matches found
+                    </p>
+                  </div>
+                  
+                  <div className={`p-4 rounded-lg border ${
+                    results.final_decision.externalApiAvailable 
+                      ? 'bg-green-50 border-green-200' 
+                      : 'bg-gray-50 border-gray-200'
+                  }`}>
+                    <div className="flex items-center mb-2">
+                      <span className="text-2xl mr-2">🌐</span>
+                      <h4 className="font-semibold text-gray-800">External Verification</h4>
+                    </div>
+                    <p className="text-sm text-gray-600">
+                      {results.final_decision.externalApiAvailable 
+                        ? 'Third-party API Check' 
+                        : 'Unavailable'}
+                    </p>
+                    <p className={`text-lg font-bold mt-2 ${
+                      results.final_decision.externalApiAvailable 
+                        ? 'text-green-700' 
+                        : 'text-gray-500'
+                    }`}>
+                      {results.final_decision.externalApiAvailable 
+                        ? `${results.final_decision.externalMatchCount} matches found`
+                        : 'Not available'}
+                    </p>
+                  </div>
+                </div>
+                
+                {/* Reasons */}
+                <div className="mt-4">
+                  <h4 className="font-semibold text-gray-800 mb-2">Analysis:</h4>
+                  <ul className="space-y-2">
+                    {results.final_decision.reasons.map((reason, idx) => (
+                      <li key={idx} className="flex items-start">
+                        <span className="text-primary-500 mr-2">•</span>
+                        <span className="text-gray-700">{reason}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </Card>
+          )}
+          
           {/* Summary */}
-          <Card title="📊 Summary">
+          <Card title="📊 Local Detection Summary">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center p-4 bg-gray-50 rounded-lg">
                 <div className="text-3xl font-bold text-gray-800">
@@ -335,6 +419,84 @@ const CheckSimilarity = () => {
               </div>
             </div>
           </Card>
+          
+          {/* External API Results (New) */}
+          {results.external_result && (
+            <Card title="🌐 External API Verification">
+              {results.external_result.available ? (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
+                    <div>
+                      <p className="font-semibold text-green-800">✅ External API Check Completed</p>
+                      <p className="text-sm text-green-600 mt-1">
+                        Threshold: {(results.external_result.thresholdUsed * 100).toFixed(0)}%
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-green-700">
+                        {results.external_result.matches.length}
+                      </div>
+                      <div className="text-sm text-green-600">Matches</div>
+                    </div>
+                  </div>
+                  
+                  {results.external_result.matches.length > 0 && (
+                    <div className="space-y-3">
+                      <h4 className="font-semibold text-gray-800">External Matches:</h4>
+                      {results.external_result.matches.map((match, idx) => (
+                        <div key={idx} className="p-4 bg-white border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
+                          <div className="flex items-center justify-between mb-2">
+                            <div>
+                              <span className="font-semibold text-gray-800">
+                                Student: {match.matchedStudentId}
+                              </span>
+                              <span className="text-sm text-gray-500 ml-2">
+                                (ID: {match.matchedSubmissionId})
+                              </span>
+                            </div>
+                            <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                              match.similarityScore >= 0.85 
+                                ? 'bg-danger-100 text-danger-700'
+                                : 'bg-orange-100 text-orange-700'
+                            }`}>
+                              {(match.similarityScore * 100).toFixed(1)}%
+                            </span>
+                          </div>
+                          {match.matchedCode && (
+                            <div className="mt-2 p-3 bg-gray-50 rounded border border-gray-200">
+                              <p className="text-xs text-gray-500 mb-1">Matched Code:</p>
+                              <pre className="text-sm text-gray-700 overflow-x-auto">
+                                {match.matchedCode.substring(0, 200)}
+                                {match.matchedCode.length > 200 && '...'}
+                              </pre>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {results.external_result.matches.length === 0 && (
+                    <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                      <p className="text-green-700">
+                        ✅ No matches found by external API verification
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                  <p className="font-semibold text-yellow-800">⚠️ External API Unavailable</p>
+                  <p className="text-sm text-yellow-600 mt-1">
+                    {results.external_result.error || results.external_result.reason || 'External verification service is currently unavailable'}
+                  </p>
+                  <p className="text-sm text-yellow-600 mt-2">
+                    ℹ️ Results are based on local detection only
+                  </p>
+                </div>
+              )}
+            </Card>
+          )}
           
           {/* Similar Submissions */}
           {results.similarSubmissions && results.similarSubmissions.length > 0 && (
