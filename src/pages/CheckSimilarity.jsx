@@ -420,59 +420,112 @@ const CheckSimilarity = () => {
             </div>
           </Card>
           
-          {/* External API Results (New) */}
+          {/* External API Results (New) - Dual Detection Methods */}
           {results.external_result && (
-            <Card title="🌐 External API Verification">
+            <Card title="🌐 External API Verification (Dual Detection)">
               {results.external_result.available ? (
                 <div className="space-y-4">
+                  {/* Overview */}
                   <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
                     <div>
                       <p className="font-semibold text-green-800">✅ External API Check Completed</p>
                       <p className="text-sm text-green-600 mt-1">
-                        Threshold: {(results.external_result.thresholdUsed * 100).toFixed(0)}%
+                        Dual Detection: Copy Detection + AST Analysis
                       </p>
                     </div>
                     <div className="text-right">
                       <div className="text-2xl font-bold text-green-700">
                         {results.external_result.matches.length}
                       </div>
-                      <div className="text-sm text-green-600">Matches</div>
+                      <div className="text-sm text-green-600">Total Matches</div>
                     </div>
                   </div>
                   
-                  {results.external_result.matches.length > 0 && (
-                    <div className="space-y-3">
-                      <h4 className="font-semibold text-gray-800">External Matches:</h4>
-                      {results.external_result.matches.map((match, idx) => (
-                        <div key={idx} className="p-4 bg-white border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
-                          <div className="flex items-center justify-between mb-2">
-                            <div>
-                              <span className="font-semibold text-gray-800">
-                                Student: {match.matchedStudentId}
-                              </span>
-                              <span className="text-sm text-gray-500 ml-2">
-                                (ID: {match.matchedSubmissionId})
-                              </span>
+                  {/* Copy Detection Results */}
+                  {results.external_result.copyDetect && (
+                    <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="font-semibold text-blue-800 flex items-center">
+                          <span className="mr-2">📋</span>
+                          Copy Detection
+                        </h4>
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                          results.external_result.copyDetect.matchesFound
+                            ? 'bg-danger-100 text-danger-700'
+                            : 'bg-gray-100 text-gray-700'
+                        }`}>
+                          {results.external_result.copyDetect.matchesFound ? 'Matches Found' : 'No Matches'}
+                        </span>
+                      </div>
+                      {results.external_result.copyDetect.matches.length > 0 && (
+                        <div className="space-y-2">
+                          {results.external_result.copyDetect.matches.map((match, idx) => (
+                            <div key={idx} className="p-3 bg-white rounded border border-blue-200">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-sm font-semibold text-gray-800">
+                                  Student: {match.matchedStudentId}
+                                </span>
+                                <span className="px-2 py-1 bg-danger-100 text-danger-700 rounded text-xs font-semibold">
+                                  {(match.similarityScore * 100).toFixed(1)}%
+                                </span>
+                              </div>
+                              {match.matchedCode && (
+                                <pre className="text-xs text-gray-600 overflow-x-auto bg-gray-50 p-2 rounded">
+                                  {match.matchedCode.substring(0, 150)}
+                                  {match.matchedCode.length > 150 && '...'}
+                                </pre>
+                              )}
                             </div>
-                            <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                              match.similarityScore >= 0.85 
-                                ? 'bg-danger-100 text-danger-700'
-                                : 'bg-orange-100 text-orange-700'
-                            }`}>
-                              {(match.similarityScore * 100).toFixed(1)}%
-                            </span>
-                          </div>
-                          {match.matchedCode && (
-                            <div className="mt-2 p-3 bg-gray-50 rounded border border-gray-200">
-                              <p className="text-xs text-gray-500 mb-1">Matched Code:</p>
-                              <pre className="text-sm text-gray-700 overflow-x-auto">
-                                {match.matchedCode.substring(0, 200)}
-                                {match.matchedCode.length > 200 && '...'}
-                              </pre>
-                            </div>
-                          )}
+                          ))}
                         </div>
-                      ))}
+                      )}
+                      {results.external_result.copyDetect.matches.length === 0 && (
+                        <p className="text-sm text-blue-600">No direct copy matches detected</p>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Tree-Sitter Python AST Results */}
+                  {results.external_result.treeSitterPython && (
+                    <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="font-semibold text-purple-800 flex items-center">
+                          <span className="mr-2">🌳</span>
+                          AST-Based Detection (Tree-Sitter Python)
+                        </h4>
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                          results.external_result.treeSitterPython.matchesFound
+                            ? 'bg-danger-100 text-danger-700'
+                            : 'bg-gray-100 text-gray-700'
+                        }`}>
+                          {results.external_result.treeSitterPython.matchesFound ? 'Matches Found' : 'No Matches'}
+                        </span>
+                      </div>
+                      {results.external_result.treeSitterPython.matches.length > 0 && (
+                        <div className="space-y-2">
+                          {results.external_result.treeSitterPython.matches.map((match, idx) => (
+                            <div key={idx} className="p-3 bg-white rounded border border-purple-200">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-sm font-semibold text-gray-800">
+                                  Student: {match.matchedStudentId}
+                                </span>
+                                <span className="px-2 py-1 bg-danger-100 text-danger-700 rounded text-xs font-semibold">
+                                  {(match.similarityScore * 100).toFixed(1)}%
+                                </span>
+                              </div>
+                              {match.matchedCode && (
+                                <pre className="text-xs text-gray-600 overflow-x-auto bg-gray-50 p-2 rounded">
+                                  {match.matchedCode.substring(0, 150)}
+                                  {match.matchedCode.length > 150 && '...'}
+                                </pre>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {results.external_result.treeSitterPython.matches.length === 0 && (
+                        <p className="text-sm text-purple-600">No structural matches detected</p>
+                      )}
                     </div>
                   )}
                   
