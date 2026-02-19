@@ -485,25 +485,30 @@ const CheckSimilarity = () => {
                     </div>
                   )}
                   
-                  {/* Tree-Sitter Python AST Results */}
-                  {results.external_result.treeSitterPython && (
+                  {/* AST-Based Detection (Language Agnostic) */}
+                  {(results.external_result.astDetect || results.external_result.treeSitterPython) && (
                     <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
                       <div className="flex items-center justify-between mb-3">
                         <h4 className="font-semibold text-purple-800 flex items-center">
                           <span className="mr-2">🌳</span>
-                          AST-Based Detection (Tree-Sitter Python)
+                          AST-Based Detection
+                          {results.external_result.astDetect?.language && (
+                            <span className="ml-2 text-xs bg-purple-200 text-purple-800 px-2 py-1 rounded">
+                              {results.external_result.astDetect.language.toUpperCase()}
+                            </span>
+                          )}
                         </h4>
                         <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                          results.external_result.treeSitterPython.matchesFound
+                          (results.external_result.astDetect?.matchesFound || results.external_result.treeSitterPython?.matchesFound)
                             ? 'bg-danger-100 text-danger-700'
                             : 'bg-gray-100 text-gray-700'
                         }`}>
-                          {results.external_result.treeSitterPython.matchesFound ? 'Matches Found' : 'No Matches'}
+                          {(results.external_result.astDetect?.matchesFound || results.external_result.treeSitterPython?.matchesFound) ? 'Matches Found' : 'No Matches'}
                         </span>
                       </div>
-                      {results.external_result.treeSitterPython.matches.length > 0 && (
+                      {((results.external_result.astDetect?.matches?.length || 0) > 0 || (results.external_result.treeSitterPython?.matches?.length || 0) > 0) && (
                         <div className="space-y-2">
-                          {results.external_result.treeSitterPython.matches.map((match, idx) => (
+                          {(results.external_result.astDetect?.matches || results.external_result.treeSitterPython?.matches || []).map((match, idx) => (
                             <div key={idx} className="p-3 bg-white rounded border border-purple-200">
                               <div className="flex items-center justify-between mb-2">
                                 <span className="text-sm font-semibold text-gray-800">
@@ -523,7 +528,7 @@ const CheckSimilarity = () => {
                           ))}
                         </div>
                       )}
-                      {results.external_result.treeSitterPython.matches.length === 0 && (
+                      {((results.external_result.astDetect?.matches?.length || 0) === 0 && (results.external_result.treeSitterPython?.matches?.length || 0) === 0) && (
                         <p className="text-sm text-purple-600">No structural matches detected</p>
                       )}
                     </div>
