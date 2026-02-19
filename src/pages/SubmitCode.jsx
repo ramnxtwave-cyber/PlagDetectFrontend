@@ -46,11 +46,52 @@ const SubmitCode = () => {
     }
   };
   
+  // Detect language from code content
+  const detectLanguage = (code) => {
+    const trimmedCode = code.trim();
+    
+    // Python detection
+    if (trimmedCode.match(/^(def|class|import|from|if __name__|print\()/m) ||
+        trimmedCode.includes('def ') || 
+        trimmedCode.includes('import ') ||
+        trimmedCode.match(/:\s*$/m)) {
+      return 'python';
+    }
+    
+    // Java detection
+    if (trimmedCode.match(/public\s+(class|static|void)|import\s+java\.|System\.out/)) {
+      return 'java';
+    }
+    
+    // C++ detection
+    if (trimmedCode.match(/#include\s*<|std::|cout|cin|namespace/) ||
+        trimmedCode.includes('std::')) {
+      return 'cpp';
+    }
+    
+    // JavaScript detection (default)
+    if (trimmedCode.match(/function|const\s+\w+\s*=|let\s+\w+\s*=|var\s+\w+\s*=|=>|console\.log/)) {
+      return 'javascript';
+    }
+    
+    // If unclear but has Python-like indentation
+    if (trimmedCode.split('\n').some(line => line.match(/^    [a-z]/))) {
+      return 'python';
+    }
+    
+    // Default to javascript
+    return 'javascript';
+  };
+  
   // Handle code editor change
   const handleCodeChange = (e) => {
+    const newCode = e.target.value;
+    const detectedLang = detectLanguage(newCode);
+    
     setFormData(prev => ({
       ...prev,
-      code: e.target.value
+      code: newCode,
+      language: detectedLang  // Auto-detect language
     }));
     
     if (errors.code) {
@@ -198,6 +239,9 @@ const SubmitCode = () => {
           <div className="mb-4">
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               Programming Language
+              <span className="ml-2 text-xs font-normal text-green-600">
+                ✨ Auto-detected from your code
+              </span>
             </label>
             <select
               name="language"
